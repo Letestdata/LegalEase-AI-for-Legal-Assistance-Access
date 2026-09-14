@@ -1,0 +1,1 @@
+# LegalEase-AI-for-Legal-Assistance-Access
