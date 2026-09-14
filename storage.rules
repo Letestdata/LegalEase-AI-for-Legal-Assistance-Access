@@ -1,0 +1,16 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper function to verify authentication
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Only allow users to access their own uploaded legal documents
+    // Structure: documents/{userId}/{documentId}/{fileName}
+    match /documents/{userId}/{documentId}/{fileName} {
+      allow read, write, delete: if isAuthenticated() && request.auth.uid == userId;
+    }
+  }
+}
