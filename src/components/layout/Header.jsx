@@ -13,9 +13,9 @@ export default function Header({ onNavigate }) {
         {/* Workspace status badge */}
         <div className="flex items-center gap-space-sm">
           <div className="flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm border border-outline-variant/40">
-            <span className="material-symbols-outlined text-[14px] text-primary">shield</span>
+            <span className="material-symbols-outlined text-[14px] text-primary" aria-hidden="true">shield</span>
             <span className="font-medium">Workspace Secure</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-tertiary ml-0.5"></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-tertiary ml-0.5" aria-hidden="true"></span>
           </div>
         </div>
 
@@ -27,7 +27,7 @@ export default function Header({ onNavigate }) {
             title="Help & FAQ"
             aria-label="Help and FAQ"
           >
-            <span className="material-symbols-outlined text-[20px]">help_outline</span>
+            <span className="material-symbols-outlined text-[20px]" aria-hidden="true">help_outline</span>
           </button>
 
           <button 

@@ -72,3 +72,35 @@ export async function verifyFileMagicBytes(file) {
     return !name.endsWith('.pdf') && !name.endsWith('.docx');
   }
 }
+
+/**
+ * Redacts common Personally Identifiable Information (PII) from text
+ * for enhanced legal document privacy before client-side or AI processing.
+ * @param {string} text
+ * @returns {string} Sanitized text with redacted PII
+ */
+export function redactPII(text) {
+  if (!text || typeof text !== 'string') return '';
+  return text
+    // Redact US Social Security Numbers: 000-00-0000
+    .replace(/\b\d{3}-\d{2}-\d{4}\b/g, '[REDACTED SSN]')
+    // Redact Credit Card Numbers: 16 digits (hyphen/space separated)
+    .replace(/\b(?:\d{4}[ -]?){3}\d{4}\b/g, '[REDACTED CARD]')
+    // Redact Phone Numbers: (xxx) xxx-xxxx or xxx-xxx-xxxx or +1-xxx-xxx-xxxx
+    .replace(/(?:\+?1[-.\s]?)?(?:\(\d{3}\)|\b\d{3})[-.\s]?\d{3}[-.\s]?\d{4}\b/g, '[REDACTED PHONE]');
+}
+
+/**
+ * Validates whether a URL is safe to open/link (blocks javascript:, vbscript:, data:)
+ * @param {string} url
+ * @returns {boolean}
+ */
+export function isSafeUrl(url) {
+  if (!url || typeof url !== 'string') return false;
+  const trimmed = url.trim().toLowerCase();
+  if (trimmed.startsWith('javascript:') || trimmed.startsWith('vbscript:') || trimmed.startsWith('data:text/html')) {
+    return false;
+  }
+  return true;
+}
+

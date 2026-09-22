@@ -26,7 +26,7 @@ export default function MobileNav({ currentView, onNavigate }) {
                 : 'text-on-surface-variant hover:text-on-surface'
             }`}
           >
-            <span className={`material-symbols-outlined text-[22px] ${isActive ? 'fill' : ''}`}>
+            <span className={`material-symbols-outlined text-[22px] ${isActive ? 'fill' : ''}`} aria-hidden="true">
               {item.icon}
             </span>
             <span className="text-[11px] font-medium leading-none">{item.label}</span>

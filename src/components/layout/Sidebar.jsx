@@ -35,7 +35,7 @@ export default function Sidebar({ currentView, onNavigate }) {
             className="flex items-center gap-space-sm text-left focus:outline-none group cursor-pointer"
           >
             <div className="w-8 h-8 rounded-lg bg-primary-container text-on-primary flex items-center justify-center font-bold text-lg shadow-sm group-hover:scale-105 transition-transform">
-              <span className="material-symbols-outlined text-[20px]">gavel</span>
+              <span className="material-symbols-outlined text-[20px]" aria-hidden="true">gavel</span>
             </div>
             <span className="font-headline-sm text-headline-sm text-primary tracking-tight font-bold">
               LegalEase
@@ -61,7 +61,7 @@ export default function Sidebar({ currentView, onNavigate }) {
                     : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
                 }`}
               >
-                <span className={`material-symbols-outlined text-[20px] ${isActive ? 'fill' : ''}`}>
+                <span className={`material-symbols-outlined text-[20px] ${isActive ? 'fill' : ''}`} aria-hidden="true">
                   {item.icon}
                 </span>
                 <span>{item.label}</span>
@@ -84,7 +84,7 @@ export default function Sidebar({ currentView, onNavigate }) {
                   : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
               }`}
             >
-              <span className="material-symbols-outlined text-[18px]">
+              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
                 {item.icon}
               </span>
               <span>{item.label}</span>
@@ -94,7 +94,7 @@ export default function Sidebar({ currentView, onNavigate }) {
             onClick={handleSignOut}
             className="flex items-center gap-space-sm px-space-md py-space-xs rounded-lg font-label-md text-label-md text-error hover:bg-error-container/30 transition-colors text-left cursor-pointer"
           >
-            <span className="material-symbols-outlined text-[18px]">logout</span>
+            <span className="material-symbols-outlined text-[18px]" aria-hidden="true">logout</span>
             <span>Sign Out</span>
           </button>
         </nav>

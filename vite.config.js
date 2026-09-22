@@ -31,6 +31,15 @@ export default defineConfig({
         }
       }
     },
+    modulePreload: {
+      resolveDependencies(filename, deps) {
+        return deps.filter(dep => 
+          !dep.includes('vendor-firebase') && 
+          !dep.includes('vendor-pdfjs') && 
+          !dep.includes('vendor-mammoth')
+        );
+      }
+    },
     chunkSizeWarningLimit: 1500
   }
 });

@@ -74,6 +74,8 @@ export default function MyDocumentsView({ onNavigate, onOpenDocument }) {
             search
           </span>
           <input
+            id="document-search-input"
+            aria-label="Search documents by name or keyword"
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -82,10 +84,13 @@ export default function MyDocumentsView({ onNavigate, onOpenDocument }) {
           />
         </div>
 
-        <div className="flex items-center gap-1 self-end sm:self-auto">
+        <div role="tablist" aria-label="Filter documents by format" className="flex items-center gap-1 self-end sm:self-auto">
           {['ALL', 'PDF', 'DOCX'].map((filter) => (
             <button
               key={filter}
+              role="tab"
+              aria-selected={selectedFilter === filter}
+              aria-label={`Filter by ${filter} format`}
               onClick={() => setSelectedFilter(filter)}
               className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                 selectedFilter === filter

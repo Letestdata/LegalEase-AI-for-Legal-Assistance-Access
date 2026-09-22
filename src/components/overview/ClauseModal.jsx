@@ -27,7 +27,7 @@ export default function ClauseModal({ isOpen, onClose, clause, onAskInQA }) {
         {/* 1. What the document says */}
         <div className="flex flex-col gap-1.5 p-space-md rounded-xl bg-surface-container-high/40 border border-outline-variant/40">
           <div className="flex items-center gap-1.5 text-on-surface-variant font-label-sm text-label-sm font-semibold uppercase tracking-wider">
-            <span className="material-symbols-outlined text-[16px]">menu_book</span>
+            <span className="material-symbols-outlined text-[16px]" aria-hidden="true">menu_book</span>
             <span>What the document says (Exact text)</span>
           </div>
           <p className="font-body-sm text-body-sm text-on-surface italic bg-surface-container-lowest/80 p-3 rounded-lg border border-outline-variant/20 leading-relaxed font-mono">
@@ -38,7 +38,7 @@ export default function ClauseModal({ isOpen, onClose, clause, onAskInQA }) {
         {/* 2. Simple explanation */}
         <div className="flex flex-col gap-1.5 p-space-md rounded-xl bg-secondary-container/20 border border-secondary-container">
           <div className="flex items-center gap-1.5 text-primary font-label-sm text-label-sm font-semibold uppercase tracking-wider">
-            <span className="material-symbols-outlined text-[16px]">psychology</span>
+            <span className="material-symbols-outlined text-[16px]" aria-hidden="true">psychology</span>
             <span>Simple explanation (Plain English)</span>
           </div>
           <p className="font-body-md text-body-md text-on-surface font-medium leading-relaxed">
@@ -49,7 +49,7 @@ export default function ClauseModal({ isOpen, onClose, clause, onAskInQA }) {
         {/* 3. Who does this affect? */}
         <div className="flex flex-col gap-1">
           <h4 className="font-label-md text-label-md text-primary font-semibold flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-[16px] text-secondary">group</span>
+            <span className="material-symbols-outlined text-[16px] text-secondary" aria-hidden="true">group</span>
             <span>Who does this affect?</span>
           </h4>
           <p className="font-body-sm text-body-sm text-on-surface-variant pl-6">
@@ -60,7 +60,7 @@ export default function ClauseModal({ isOpen, onClose, clause, onAskInQA }) {
         {/* 4. Why should you care? */}
         <div className="flex flex-col gap-1">
           <h4 className="font-label-md text-label-md text-primary font-semibold flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-[16px] text-secondary">priority_high</span>
+            <span className="material-symbols-outlined text-[16px] text-secondary" aria-hidden="true">priority_high</span>
             <span>Why should you care?</span>
           </h4>
           <p className="font-body-sm text-body-sm text-on-surface-variant pl-6">
@@ -72,7 +72,7 @@ export default function ClauseModal({ isOpen, onClose, clause, onAskInQA }) {
         {clause.questionsToConsider && clause.questionsToConsider.length > 0 && (
           <div className="flex flex-col gap-2 pt-2 border-t border-outline-variant/30">
             <h4 className="font-label-md text-label-md text-primary font-semibold flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[16px] text-secondary">help</span>
+              <span className="material-symbols-outlined text-[16px] text-secondary" aria-hidden="true">help</span>
               <span>Questions to consider asking:</span>
             </h4>
             <ul className="flex flex-col gap-1.5 pl-6 list-disc text-on-surface-variant font-body-sm text-body-sm">
@@ -96,7 +96,7 @@ export default function ClauseModal({ isOpen, onClose, clause, onAskInQA }) {
               }}
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-secondary-container text-on-secondary-container font-label-md text-label-md hover:bg-secondary-container/80 transition-colors cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[16px]">chat</span>
+              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">chat</span>
               <span>Ask in Q&A</span>
             </button>
             <button

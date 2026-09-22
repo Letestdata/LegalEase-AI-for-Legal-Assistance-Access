@@ -4,7 +4,14 @@
  * and categorizes them into Important Changes, Changes to Review, and Minor Changes.
  */
 
+const compareCache = new Map();
+
 export function compareDocuments(originalText, revisedText, originalName = 'Original Document', revisedName = 'New Version') {
+  const cacheKey = `${originalName}_${revisedName}_${originalText ? originalText.length : 0}_${revisedText ? revisedText.length : 0}`;
+  if (compareCache.has(cacheKey)) {
+    return compareCache.get(cacheKey);
+  }
+
   const importantChanges = [];
   const changesToReview = [];
   const minorChanges = [];
@@ -150,7 +157,7 @@ export function compareDocuments(originalText, revisedText, originalName = 'Orig
     description: 'Adjusted third-person pronouns to gender-neutral terms throughout standard boilerplate clauses.'
   });
 
-  return {
+  const result = {
     originalName,
     revisedName,
     totalChangesCount: importantChanges.length + changesToReview.length + minorChanges.length,
@@ -158,4 +165,7 @@ export function compareDocuments(originalText, revisedText, originalName = 'Orig
     changesToReview,
     minorChanges
   };
+
+  compareCache.set(cacheKey, result);
+  return result;
 }

@@ -24,7 +24,9 @@ export default function DocumentQA({ isOpen, onClose, prefilledQuestion = '' }) 
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (typeof messagesEndRef.current?.scrollIntoView === 'function') {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   useEffect(() => {
@@ -247,6 +249,8 @@ export default function DocumentQA({ isOpen, onClose, prefilledQuestion = '' }) 
           className="mt-2 flex items-center gap-2"
         >
           <input
+            id="qa-question-input"
+            aria-label="Ask a question about this legal agreement"
             type="text"
             value={inputQuestion}
             onChange={(e) => setInputQuestion(e.target.value)}
@@ -256,6 +260,7 @@ export default function DocumentQA({ isOpen, onClose, prefilledQuestion = '' }) 
           />
           <button
             type="submit"
+            aria-label="Send question to document assistant"
             disabled={!inputQuestion.trim() || isAnswering}
             className="px-4 py-2.5 rounded-xl bg-primary-container text-on-primary text-sm font-semibold hover:bg-primary transition-colors disabled:opacity-40 cursor-pointer flex items-center gap-1 shrink-0"
           >

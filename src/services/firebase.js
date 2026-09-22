@@ -37,7 +37,6 @@ if (isFirebaseConfigured) {
     auth = getAuth(app);
     db = getFirestore(app);
     storage = getStorage(app);
-    console.log("Firebase connected successfully to live project:", firebaseConfig.projectId);
   } catch (error) {
     console.warn("Failed to initialize live Firebase, falling back to local emulator mode:", error);
   }

@@ -57,10 +57,17 @@ function findSentenceWithKeywords(text, keywords) {
   return null;
 }
 
+const documentAnalysisCache = new Map();
+
 /**
  * Analyzes contract text and returns structured analysis complying with PRD Section 9, 10, 11, 16
  */
 export async function analyzeLegalDocument(rawText, fileName, onProgress, withDelay = true) {
+  const cacheKey = `${fileName || ''}_${rawText ? rawText.slice(0, 500) : ''}_${rawText ? rawText.length : 0}`;
+  if (!withDelay && documentAnalysisCache.has(cacheKey)) {
+    return documentAnalysisCache.get(cacheKey);
+  }
+
   if (withDelay) {
     const steps = [
       { text: 'Reading document', delay: 250 },
@@ -557,7 +564,7 @@ export async function analyzeLegalDocument(rawText, fileName, onProgress, withDe
     }
   });
 
-  return {
+  const result = {
     documentType,
     fileName,
     analyzedAt: 'Analyzed today',
@@ -577,6 +584,9 @@ export async function analyzeLegalDocument(rawText, fileName, onProgress, withDe
     lawyerPrep,
     sections
   };
+
+  documentAnalysisCache.set(cacheKey, result);
+  return result;
 }
 
 /**

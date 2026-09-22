@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { sanitizeHtml, sanitizeText, verifyFileMagicBytes } from '../src/services/securityService';
+import { sanitizeHtml, sanitizeText, verifyFileMagicBytes, redactPII, isSafeUrl } from '../src/services/securityService';
 
 describe('Security Service & Sanitization', () => {
   it('strips malicious script tags and event handlers via sanitizeHtml', () => {
@@ -48,4 +48,23 @@ describe('Security Service & Sanitization', () => {
     const isValid = await verifyFileMagicBytes(fakeTxt);
     expect(isValid).toBe(false);
   });
+
+  it('redacts sensitive PII such as SSNs, credit cards, and phone numbers', () => {
+    const raw = 'SSN: 123-45-6789, Card: 4111-2222-3333-4444, Phone: (555) 123-4567';
+    const redacted = redactPII(raw);
+    expect(redacted).toContain('[REDACTED SSN]');
+    expect(redacted).toContain('[REDACTED CARD]');
+    expect(redacted).toContain('[REDACTED PHONE]');
+    expect(redacted).not.toContain('123-45-6789');
+    expect(redacted).not.toContain('4111-2222-3333-4444');
+    expect(redacted).not.toContain('555-123-4567');
+  });
+
+  it('evaluates safe and unsafe URL schemes correctly', () => {
+    expect(isSafeUrl('https://legalease.ai/docs')).toBe(true);
+    expect(isSafeUrl('/overview')).toBe(true);
+    expect(isSafeUrl('javascript:stealData()')).toBe(false);
+    expect(isSafeUrl('vbscript:execute()')).toBe(false);
+  });
 });
+

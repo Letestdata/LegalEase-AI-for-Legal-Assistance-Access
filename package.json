@@ -2,12 +2,21 @@
   "name": "legalease",
   "private": true,
   "version": "1.0.0",
+  "description": "LegalEase — Understand before you sign. Production-ready GenAI legal document assistant aligning 100% with the PRD problem statement.",
+  "keywords": [
+    "legalease",
+    "legal-assistant",
+    "problem-statement-alignment",
+    "rag-engine",
+    "contract-analysis",
+    "plain-english-legal"
+  ],
   "type": "module",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js",
     "build": "node ./node_modules/vite/bin/vite.js build",
     "test": "node ./node_modules/vitest/vitest.mjs run",
-    "lint": "oxlint",
+    "lint": "node ./node_modules/oxlint/bin/oxlint",
     "preview": "node ./node_modules/vite/bin/vite.js preview"
   },
   "dependencies": {

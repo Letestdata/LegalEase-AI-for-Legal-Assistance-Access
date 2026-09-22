@@ -79,6 +79,8 @@ export default function UploadZone({ onUploadComplete }) {
 
             <input
               ref={fileInputRef}
+              id="document-upload-input"
+              aria-label="Upload legal document (PDF, DOC, DOCX, TXT)"
               type="file"
               accept=".pdf,.docx,.doc,.txt"
               className="sr-only"
@@ -92,7 +94,11 @@ export default function UploadZone({ onUploadComplete }) {
           </div>
 
           {localError && (
-            <div className="p-3 rounded-lg bg-error-container/40 border border-error/20 text-on-error-container text-sm flex items-center gap-2">
+            <div 
+              role="alert" 
+              aria-live="assertive"
+              className="p-3 rounded-lg bg-error-container/40 border border-error/20 text-on-error-container text-sm flex items-center gap-2"
+            >
               <span className="material-symbols-outlined text-[18px] text-error">error</span>
               <span>{localError}</span>
             </div>
@@ -103,10 +109,19 @@ export default function UploadZone({ onUploadComplete }) {
         <div className="lg:col-span-5 flex flex-col justify-center">
           <div
             id="drop-zone"
+            role="button"
+            tabIndex={0}
+            aria-label="Drag and drop or browse to upload document"
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onClick={() => fileInputRef.current?.click()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                fileInputRef.current?.click();
+              }
+            }}
             className={`group relative rounded-xl p-space-lg flex flex-col items-center justify-center text-center transition-all duration-200 cursor-pointer border-2 border-dashed ${
               isDragOver
                 ? 'border-primary bg-secondary-container/40'

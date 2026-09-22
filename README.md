@@ -4,17 +4,21 @@
 
 ---
 
-## 1. Problem Statement & Mission
+## 1. Problem Statement Alignment & Mission
 
-### The Problem
-Every year, hundreds of millions of people sign legally binding agreements—residential leases, employment offers, non-disclosure agreements (NDAs), loan contracts, and service terms—without fully understanding the fine print. 
-- **Opaque Legalese:** Contracts are riddled with archaic legal terminology, nested conditional logic, and ambiguous caveats designed by lawyers for lawyers.
-- **Hidden Liabilities:** Crucial pitfalls—such as automatic renewal clauses, punitive termination penalties, aggressive non-competes, and uncapped indemnities—often go unnoticed until it is too late.
-- **Prohibitive Legal Fees:** Consulting an attorney for routine document reviews costs anywhere from $250 to $800+ per hour, creating an inequitable barrier to justice for ordinary tenants, workers, freelancers, and small business owners.
+### The Core Problem Statement (from PRD)
+Legal documents are notoriously difficult for ordinary users because:
+1. **Legal terminology is complicated:** Archaic legalese, Latin maxims, and nested caveats obscure critical obligations.
+2. **Important conditions can be buried inside lengthy documents:** Essential details like automatic renewals, penalty fees, and deposit recovery terms are buried across tens of pages.
+3. **Users may not know which clauses deserve attention:** Without legal training, users cannot distinguish standard boilerplate from high-liability commitments.
+4. **Comparing two versions manually is time-consuming:** When counterparties issue revised contracts, detecting subtle shifts in deadlines, fees, or obligations by eye is error-prone.
+5. **Users often don't know what questions to ask a lawyer:** Consultations with attorneys are expensive ($300–$800/hr); unprepared clients waste billable hours asking generic questions.
+6. **Generic internet searches may not address the exact document the user has:** Public web searches provide generic definitions that fail to apply to the user's specific contract terms.
 
-### Our Mission
+### How LegalEase Solves This
+LegalEase addresses this by turning complex documents into an understandable, structured, and actionable experience.
 **Understand before you sign.**  
-LegalEase levels the playing field by translating opaque legal contracts into actionable, crystal-clear plain English. It surfaces critical obligations, tracks strict deadlines, flags unbalanced risk clauses, grounds every insight in the exact source text with precise citations, and prepares users for fruitful conversations with professional legal counsel.
+It surfaces critical obligations, tracks strict deadlines, flags unbalanced risk clauses, grounds every insight in the exact source text with precise citations, and prepares users for fruitful conversations with professional legal counsel.
 
 ---
 
@@ -163,7 +167,7 @@ npm run build
 | **Plain-English Clause Extraction** | `src/services/aiService.js` | `tests/ragEngine.test.js` |
 | **Grounded Q&A with Citations** | `src/services/ragEngine.js`, `DocumentQA.jsx` | `tests/ragEngine.test.js` |
 | **Side-by-Side Redline Comparison** | `src/services/compareEngine.js`, `CompareView.jsx` | `tests/compareEngine.test.js` |
-| **Lawyer Consultation Checklist** | `src/components/checklist/LawyerChecklist.jsx` | `tests/components.test.jsx` |
+| **Lawyer Consultation Checklist** | `src/components/lawyer/LawyerChecklist.jsx`, `src/components/checklist/LawyerChecklist.jsx` | `tests/components.test.jsx` |
 | **Privacy & Security Standards** | `src/services/firebase.js`, `firestore.rules` | `tests/documentService.test.js` |
 | **Accessible User Experience** | `src/components/common/*` | `tests/components.test.jsx` |
 

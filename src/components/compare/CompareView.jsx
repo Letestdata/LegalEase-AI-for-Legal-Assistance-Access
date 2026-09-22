@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useDocument } from '../../context/DocumentContext';
+import { compareDocuments } from '../../services/compareEngine';
 
 export default function CompareView({ onNavigate }) {
   const { documents, runComparison, comparisonData } = useDocument();
@@ -9,11 +10,18 @@ export default function CompareView({ onNavigate }) {
   const [activeFilter, setActiveFilter] = useState('all'); // 'all' | 'important' | 'review' | 'minor'
   const [exportNotice, setExportNotice] = useState(false);
 
-  // If no comparison run yet, compute using first two docs or defaults
-  const diffData = comparisonData || runComparison(
-    documents.find(d => d.id === origDocId) || documents[0],
-    documents.find(d => d.id === revDocId) || documents[1] || documents[0]
-  );
+  // Compute diff data purely with memoization to prevent cascading render cycles
+  const diffData = useMemo(() => {
+    if (comparisonData) return comparisonData;
+    const doc1 = documents.find(d => d.id === origDocId) || documents[0];
+    const doc2 = documents.find(d => d.id === revDocId) || documents[1] || documents[0];
+    return compareDocuments(
+      doc1?.rawContent || '',
+      doc2?.rawContent || '',
+      doc1?.fileName || 'Original (v2.1)',
+      doc2?.fileName || 'New Proposed (v3.0)'
+    );
+  }, [comparisonData, documents, origDocId, revDocId]);
 
   const handleRunComparison = () => {
     const doc1 = documents.find(d => d.id === origDocId);
