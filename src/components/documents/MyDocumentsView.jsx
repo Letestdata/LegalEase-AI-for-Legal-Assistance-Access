@@ -11,39 +11,43 @@ export default function MyDocumentsView({ onNavigate, onOpenDocument }) {
   const [newTitle, setNewTitle] = useState('');
   const [deletingDocId, setDeletingDocId] = useState(null);
 
-  const filteredDocs = documents.filter((doc) => {
-    const matchesSearch =
-      doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.fileName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType =
-      selectedFilter === 'ALL' || (doc.fileType || '').toUpperCase() === selectedFilter;
-    return matchesSearch && matchesType;
-  });
+  const filteredDocs = React.useMemo(() => {
+    const term = searchTerm.toLowerCase().trim();
+    return documents.filter((doc) => {
+      const matchesSearch =
+        !term ||
+        doc.title.toLowerCase().includes(term) ||
+        doc.fileName.toLowerCase().includes(term);
+      const matchesType =
+        selectedFilter === 'ALL' || (doc.fileType || '').toUpperCase() === selectedFilter;
+      return matchesSearch && matchesType;
+    });
+  }, [documents, searchTerm, selectedFilter]);
 
-  const handleOpen = (doc) => {
+  const handleOpen = React.useCallback((doc) => {
     selectDocument(doc);
     if (onOpenDocument) onOpenDocument(doc);
     onNavigate('overview');
-  };
+  }, [selectDocument, onOpenDocument, onNavigate]);
 
-  const handleStartRename = (doc) => {
+  const handleStartRename = React.useCallback((doc) => {
     setRenamingDoc(doc);
     setNewTitle(doc.title);
-  };
+  }, []);
 
-  const handleSaveRename = async () => {
+  const handleSaveRename = React.useCallback(async () => {
     if (renamingDoc && newTitle.trim()) {
       await renameDocument(renamingDoc.id, newTitle.trim());
       setRenamingDoc(null);
     }
-  };
+  }, [renamingDoc, newTitle, renameDocument]);
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = React.useCallback(async () => {
     if (deletingDocId) {
       await deleteDocument(deletingDocId);
       setDeletingDocId(null);
     }
-  };
+  }, [deletingDocId, deleteDocument]);
 
   return (
     <div className="flex flex-col w-full gap-space-lg pb-space-xl">

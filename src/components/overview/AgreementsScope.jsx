@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function AgreementsScope({ obligations }) {
+function AgreementsScope({ obligations }) {
   const defaultItems = [
     {
       title: 'Payment obligations',
@@ -98,3 +98,5 @@ export default function AgreementsScope({ obligations }) {
     </div>
   );
 }
+
+export default React.memo(AgreementsScope);

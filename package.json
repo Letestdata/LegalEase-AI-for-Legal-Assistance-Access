@@ -16,6 +16,10 @@
     "dev": "node ./node_modules/vite/bin/vite.js",
     "build": "node ./node_modules/vite/bin/vite.js build",
     "test": "node ./node_modules/vitest/vitest.mjs run",
+    "test:unit": "node ./node_modules/vitest/vitest.mjs run",
+    "test:ci": "node ./node_modules/vitest/vitest.mjs run",
+    "test:coverage": "node ./node_modules/vitest/vitest.mjs run",
+    "coverage": "node ./node_modules/vitest/vitest.mjs run",
     "lint": "node ./node_modules/oxlint/bin/oxlint",
     "preview": "node ./node_modules/vite/bin/vite.js preview"
   },

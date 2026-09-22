@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function SummaryCards({ stats }) {
+function SummaryCards({ stats }) {
   const defaultStats = {
     importantPointsCount: 8,
     obligationsCount: 5,
@@ -63,3 +63,5 @@ export default function SummaryCards({ stats }) {
     </div>
   );
 }
+
+export default React.memo(SummaryCards);

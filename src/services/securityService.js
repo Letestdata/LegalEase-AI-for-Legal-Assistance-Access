@@ -82,6 +82,8 @@ export async function verifyFileMagicBytes(file) {
 export function redactPII(text) {
   if (!text || typeof text !== 'string') return '';
   return text
+    // Redact Emails
+    .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[REDACTED EMAIL]')
     // Redact US Social Security Numbers: 000-00-0000
     .replace(/\b\d{3}-\d{2}-\d{4}\b/g, '[REDACTED SSN]')
     // Redact Credit Card Numbers: 16 digits (hyphen/space separated)

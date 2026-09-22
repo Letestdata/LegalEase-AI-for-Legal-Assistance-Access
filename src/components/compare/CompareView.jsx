@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useDocument } from '../../context/DocumentContext';
 import { compareDocuments } from '../../services/compareEngine';
 
@@ -23,13 +23,13 @@ export default function CompareView({ onNavigate }) {
     );
   }, [comparisonData, documents, origDocId, revDocId]);
 
-  const handleRunComparison = () => {
+  const handleRunComparison = useCallback(() => {
     const doc1 = documents.find(d => d.id === origDocId);
     const doc2 = documents.find(d => d.id === revDocId);
     runComparison(doc1, doc2);
-  };
+  }, [documents, origDocId, revDocId, runComparison]);
 
-  const handleExportDiff = () => {
+  const handleExportDiff = useCallback(() => {
     const markdown = [
       '# LegalEase — Document Comparison Differential Report',
       `Original Document: ${diffData.originalName}`,
@@ -64,7 +64,7 @@ export default function CompareView({ onNavigate }) {
 
     setExportNotice(true);
     setTimeout(() => setExportNotice(false), 2500);
-  };
+  }, [diffData]);
 
   return (
     <div className="flex flex-col w-full gap-space-xl pb-space-xl">

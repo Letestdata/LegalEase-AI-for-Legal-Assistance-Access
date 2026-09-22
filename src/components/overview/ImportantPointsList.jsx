@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function ImportantPointsList({ points, onSelectPoint }) {
+function ImportantPointsList({ points, onSelectPoint }) {
   const defaultPoints = [
     {
       id: 'point-1',
@@ -160,3 +160,5 @@ export default function ImportantPointsList({ points, onSelectPoint }) {
     </div>
   );
 }
+
+export default React.memo(ImportantPointsList);

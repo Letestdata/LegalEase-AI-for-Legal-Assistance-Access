@@ -590,6 +590,60 @@ export async function analyzeLegalDocument(rawText, fileName, onProgress, withDe
 }
 
 /**
+ * Executes a GenAI completion using Google Gemini API when an API key is provided.
+ * Complies with PRD Section 20 & 24 (GenAI + document-grounded RAG).
+ * Gracefully falls back to client-side grounded RAG if no key is provided or offline.
+ * @param {string} prompt
+ * @param {string} context
+ * @returns {Promise<string|null>}
+ */
+export async function callGeminiGenAI(prompt, context = '') {
+  const apiKey = (typeof window !== 'undefined' && localStorage.getItem('legalease_gemini_api_key')) || 
+                 (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_API_KEY) || '';
+
+  if (!apiKey) return null;
+
+  try {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const systemInstruction = `You are LegalEase, an AI document assistant designed to help people understand legal documents before they sign.
+Strict PRD Rules:
+1. Explain in clear, simple English without archaic legal jargon.
+2. Ground all answers strictly in the provided document context.
+3. If the answer is not in the document, respond with: "I couldn't find information about this in the uploaded document."
+4. Do not provide legal advice or guarantee legal outcomes. Always cite relevant sections.`;
+
+    const body = {
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            { text: `${systemInstruction}\n\nDocument Context:\n${context.slice(0, 15000)}\n\nUser Question:\n${prompt}` }
+          ]
+        }
+      ],
+      generationConfig: {
+        temperature: 0.1,
+        maxOutputTokens: 1000
+      }
+    };
+
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) return null;
+    const data = await res.json();
+    const candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    return candidateText || null;
+  } catch (err) {
+    console.warn('Gemini GenAI request error, falling back to local grounded engine:', err);
+    return null;
+  }
+}
+
+/**
  * Executes strictly grounded Q&A with document-type awareness and anti-hallucination guards
  */
 export async function askDocumentQuestion(question, analysis = {}, activeDocument = null) {
@@ -599,6 +653,27 @@ export async function askDocumentQuestion(question, analysis = {}, activeDocumen
       sources: [],
       found: false
     };
+  }
+
+  // Attempt live Gemini GenAI completion if configured
+  const documentContext = activeDocument?.rawContent || '';
+  if (documentContext && !isPdfBytecode(documentContext)) {
+    const geminiAnswer = await callGeminiGenAI(question, documentContext);
+    if (geminiAnswer) {
+      return {
+        answer: geminiAnswer,
+        sources: [
+          {
+            page: 1,
+            section: 'AI Context',
+            title: activeDocument?.title || 'Document Section',
+            excerpt: documentContext.slice(0, 200),
+            citation: 'AI Analysis • Gemini Grounded'
+          }
+        ],
+        found: !geminiAnswer.includes("couldn't find")
+      };
+    }
   }
 
   const qLower = question.toLowerCase().trim();
