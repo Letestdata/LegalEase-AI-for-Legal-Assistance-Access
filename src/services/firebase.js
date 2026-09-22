@@ -6,37 +6,9 @@
  */
 
 import { initializeApp, getApps } from 'firebase/app';
-import { 
-  getAuth, 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
-  signOut as fbSignOut, 
-  onAuthStateChanged,
-  GoogleAuthProvider,
-  signInWithPopup,
-  updateProfile
-} from 'firebase/auth';
-import { 
-  getFirestore, 
-  collection, 
-  doc, 
-  setDoc, 
-  getDoc, 
-  getDocs, 
-  query, 
-  where, 
-  deleteDoc, 
-  orderBy, 
-  addDoc, 
-  serverTimestamp 
-} from 'firebase/firestore';
-import { 
-  getStorage, 
-  ref, 
-  uploadBytesResumable, 
-  getDownloadURL, 
-  deleteObject 
-} from 'firebase/storage';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 // Check if valid Firebase configuration is provided
 const firebaseConfig = {

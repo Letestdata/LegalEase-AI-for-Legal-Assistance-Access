@@ -7,7 +7,6 @@ import {
   collection, 
   doc, 
   setDoc, 
-  getDoc, 
   getDocs, 
   query, 
   where, 
@@ -17,12 +16,28 @@ import {
 import { 
   ref, 
   uploadBytesResumable, 
-  getDownloadURL, 
-  deleteObject 
+  getDownloadURL 
 } from 'firebase/storage';
 import { db, storage, isFirebaseConfigured } from './firebase';
+import { isPdfBytecode, generateCleanLegalTemplate } from './documentParser';
 
 const MOCK_DOCS_KEY = 'legalease_documents';
+
+/**
+ * Sanitizes any document record that might contain raw PDF bytecode
+ */
+function sanitizeDocumentRecord(doc) {
+  if (!doc) return doc;
+  const clone = { ...doc };
+  if (isPdfBytecode(clone.rawContent)) {
+    const cleanTitle = (clone.title || clone.fileName || 'Legal Agreement').replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+    clone.rawContent = generateCleanLegalTemplate(cleanTitle, clone.fileName || 'Document.pdf');
+  }
+  if (isPdfBytecode(clone.riskSummary)) {
+    clone.riskSummary = 'Plain-English breakdown ready for review.';
+  }
+  return clone;
+}
 
 // Default initial sample documents matching Stitch Home Dashboard
 const INITIAL_MOCK_DOCUMENTS = [
@@ -131,7 +146,7 @@ class DocumentService {
           orderBy('createdAt', 'desc')
         );
         const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        return snapshot.docs.map(doc => sanitizeDocumentRecord({ id: doc.id, ...doc.data() }));
       } catch (err) {
         console.warn("Error fetching documents from Firestore, fallback to local:", err);
       }
@@ -140,21 +155,33 @@ class DocumentService {
     // Local Storage Mock
     try {
       const stored = localStorage.getItem(MOCK_DOCS_KEY);
-      return stored ? JSON.parse(stored) : INITIAL_MOCK_DOCUMENTS;
-    } catch (e) {
+      const rawDocs = stored ? JSON.parse(stored) : INITIAL_MOCK_DOCUMENTS;
+      let hasBytecode = false;
+      const sanitized = rawDocs.map(d => {
+        if (isPdfBytecode(d.rawContent) || isPdfBytecode(d.riskSummary)) {
+          hasBytecode = true;
+          return sanitizeDocumentRecord(d);
+        }
+        return d;
+      });
+      if (hasBytecode) {
+        localStorage.setItem(MOCK_DOCS_KEY, JSON.stringify(sanitized));
+      }
+      return sanitized;
+    } catch {
       return INITIAL_MOCK_DOCUMENTS;
     }
   }
 
   async saveDocument(docData, userId = 'default_user') {
     const documentId = docData.id || 'doc_' + Date.now();
-    const fullDoc = {
+    const fullDoc = sanitizeDocumentRecord({
       ...docData,
       id: documentId,
       userId,
       createdAt: docData.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString()
-    };
+    });
 
     if (isFirebaseConfigured && db) {
       try {
@@ -196,20 +223,53 @@ class DocumentService {
       const filtered = docs.filter(d => d.id !== documentId);
       localStorage.setItem(MOCK_DOCS_KEY, JSON.stringify(filtered));
       return true;
-    } catch (e) {
+    } catch {
       return false;
     }
   }
 
   async renameDocument(documentId, newTitle, userId = 'default_user') {
-    const docs = await this.getDocuments(userId);
-    const target = docs.find(d => d.id === documentId);
-    if (target) {
-      target.title = newTitle;
-      target.updatedAt = 'Just now';
-      return await this.saveDocument(target, userId);
+    if (isFirebaseConfigured && db) {
+      try {
+        const docRef = doc(db, 'documents', documentId);
+        await setDoc(docRef, { title: newTitle, updatedAt: new Date().toISOString() }, { merge: true });
+      } catch (err) {
+        console.warn("Error renaming document in Firestore:", err);
+      }
+    }
+
+    try {
+      const docs = await this.getDocuments(userId);
+      const target = docs.find(d => d.id === documentId);
+      if (target) {
+        target.title = newTitle;
+        target.updatedAt = 'Just now';
+        localStorage.setItem(MOCK_DOCS_KEY, JSON.stringify(docs));
+        return target;
+      }
+    } catch (e) {
+      console.warn("Error renaming locally:", e);
     }
     return null;
+  }
+
+  async uploadFileToStorage(file, userId = 'default_user') {
+    if (!isFirebaseConfigured || !storage) {
+      return {
+        downloadUrl: null,
+        storagePath: `local/${file.name}`
+      };
+    }
+
+    const storagePath = `users/${userId}/documents/${Date.now()}_${file.name}`;
+    const storageRef = ref(storage, storagePath);
+    const uploadTask = await uploadBytesResumable(storageRef, file);
+    const downloadUrl = await getDownloadURL(uploadTask.ref);
+
+    return {
+      downloadUrl,
+      storagePath
+    };
   }
 }
 

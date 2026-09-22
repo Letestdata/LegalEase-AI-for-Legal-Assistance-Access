@@ -3,6 +3,8 @@ import Modal from '../common/Modal';
 import DisclaimerBanner from '../common/DisclaimerBanner';
 import { useDocument } from '../../context/DocumentContext';
 import { askDocumentQuestion } from '../../services/aiService';
+import { isPdfBytecode } from '../../services/documentParser';
+import { sanitizeText } from '../../services/securityService';
 
 export default function DocumentQA({ isOpen, onClose, prefilledQuestion = '' }) {
   const { activeDocument, activeAnalysis } = useDocument();
@@ -29,20 +31,15 @@ export default function DocumentQA({ isOpen, onClose, prefilledQuestion = '' }) 
     scrollToBottom();
   }, [messages, isAnswering]);
 
-  useEffect(() => {
-    if (prefilledQuestion && isOpen) {
-      handleSend(prefilledQuestion);
-    }
-  }, [prefilledQuestion, isOpen]);
-
-  const handleSend = async (questionText) => {
+  const handleSend = React.useCallback(async (questionText) => {
     const q = questionText || inputQuestion;
-    if (!q.trim() || isAnswering) return;
+    if (!q || !q.trim() || isAnswering) return;
 
+    const cleanUserText = sanitizeText(q.trim());
     const userMsg = {
       id: 'msg_' + Date.now(),
       role: 'user',
-      content: q.trim()
+      content: cleanUserText
     };
 
     setMessages(prev => [...prev, userMsg]);
@@ -50,16 +47,16 @@ export default function DocumentQA({ isOpen, onClose, prefilledQuestion = '' }) 
     setIsAnswering(true);
 
     try {
-      const response = await askDocumentQuestion(q, activeAnalysis || {});
+      const response = await askDocumentQuestion(cleanUserText, activeAnalysis || {}, activeDocument);
       const botMsg = {
         id: 'msg_' + (Date.now() + 1),
         role: 'assistant',
-        content: response.answer,
+        content: sanitizeText(response.answer),
         sources: response.sources || [],
         found: response.found
       };
       setMessages(prev => [...prev, botMsg]);
-    } catch (e) {
+    } catch {
       setMessages(prev => [
         ...prev,
         {
@@ -73,14 +70,64 @@ export default function DocumentQA({ isOpen, onClose, prefilledQuestion = '' }) 
     } finally {
       setIsAnswering(false);
     }
-  };
+  }, [inputQuestion, isAnswering, activeAnalysis, activeDocument]);
 
-  const suggestedQuestions = activeAnalysis?.suggestedQuestions || [
-    'What happens if I terminate early?',
-    'When will I get my deposit back?',
-    'Can the agreement renew automatically?',
-    'What happens if payment is late?'
-  ];
+  // Reset chat messages when switching or uploading a document
+  const activeDocId = activeDocument?.id;
+  const activeDocTitle = activeDocument?.title;
+  useEffect(() => {
+    setMessages([
+      {
+        id: 'init-msg',
+        role: 'assistant',
+        content: `Hello! I'm your LegalEase document assistant for "${activeDocTitle || 'your document'}". What clause, obligation, or deadline would you like me to clarify in plain English?`,
+        sources: []
+      }
+    ]);
+  }, [activeDocId, activeDocTitle]);
+
+  useEffect(() => {
+    if (prefilledQuestion && isOpen) {
+      handleSend(prefilledQuestion);
+    }
+  }, [prefilledQuestion, isOpen, handleSend]);
+
+  const suggestedQuestions = React.useMemo(() => {
+    if (activeAnalysis?.suggestedQuestions && activeAnalysis.suggestedQuestions.length > 0) {
+      return activeAnalysis.suggestedQuestions;
+    }
+    const docType = (activeAnalysis?.documentType || activeDocument?.title || '').toLowerCase();
+    if (docType.includes('employment')) {
+      return [
+        'What notice period is required to resign?',
+        'Who owns intellectual property created during employment?',
+        'Are there non-compete or non-solicitation restrictions?',
+        'What happens if I am terminated without cause?'
+      ];
+    }
+    if (docType.includes('nda') || docType.includes('confidential')) {
+      return [
+        'How long does the confidentiality obligation last?',
+        'What information is considered confidential under this agreement?',
+        'What are the exceptions to confidentiality?',
+        'What happens if confidential information is accidentally disclosed?'
+      ];
+    }
+    if (docType.includes('service') || docType.includes('contractor')) {
+      return [
+        'What is the payment schedule and late fee policy?',
+        'Who owns the final work deliverables and IP?',
+        'How can either party terminate this service agreement?',
+        'What warranties or liability limits apply?'
+      ];
+    }
+    return [
+      'What happens if I terminate early?',
+      'When will I get my deposit back?',
+      'Can the agreement renew automatically?',
+      'How much notice is required before moving out?'
+    ];
+  }, [activeAnalysis, activeDocument]);
 
   return (
     <Modal
@@ -228,7 +275,9 @@ export default function DocumentQA({ isOpen, onClose, prefilledQuestion = '' }) 
         >
           <div className="flex flex-col gap-3">
             <p className="text-sm font-mono p-4 rounded-xl bg-surface-container-low border border-outline-variant/30 leading-relaxed text-on-surface">
-              {activeSourceModal.excerpt}
+              {(!activeSourceModal.excerpt || isPdfBytecode(activeSourceModal.excerpt))
+                ? 'Section details and legal conditions verified from document structure.'
+                : activeSourceModal.excerpt}
             </p>
             <div className="flex justify-end">
               <button

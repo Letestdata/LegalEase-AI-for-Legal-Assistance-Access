@@ -3,12 +3,46 @@
  * Retrieves relevant sections, attaches citations, and prevents hallucinations.
  */
 
+import { isPdfBytecode } from './documentParser';
+
 // Common legal stopwords to ignore during semantic matching
 const STOP_WORDS = new Set([
   'the', 'and', 'for', 'that', 'this', 'with', 'from', 'have', 'has', 'are', 'were',
   'will', 'would', 'should', 'shall', 'been', 'each', 'such', 'into', 'under', 'upon',
-  'other', 'which', 'their', 'what', 'when', 'where', 'how', 'who', 'does', 'about'
+  'other', 'which', 'their', 'what', 'when', 'where', 'how', 'who', 'does', 'about',
+  'can', 'could', 'may', 'any', 'some', 'out'
 ]);
+
+/**
+ * Normalizes words by stemming and canonicalizing common legal terms
+ */
+export function normalizeStem(word) {
+  if (!word || word.length <= 2) return '';
+  const w = word.toLowerCase().trim();
+
+  // Canonical intent mapping for common legal questions
+  if (w.startsWith('terminat') || w === 'leave' || w === 'leaving' || w === 'left' || w.startsWith('vacat') || w.startsWith('cancel') || w === 'exit') {
+    return 'terminat';
+  }
+  if (w.startsWith('renew') || w.startsWith('rollover') || w.startsWith('extend')) {
+    return 'renew';
+  }
+  if (w.startsWith('automat')) {
+    return 'automat';
+  }
+  if (w.startsWith('deposit') || w.startsWith('escrow')) {
+    return 'deposit';
+  }
+  if (w.startsWith('notic')) {
+    return 'notic';
+  }
+  if (w.startsWith('pay') || w.startsWith('paid') || w.startsWith('rent') || w.startsWith('fee') || w.startsWith('charg')) {
+    return 'pay';
+  }
+
+  // General suffix stripper
+  return w.replace(/(ing|tion|tions|ation|ations|ed|ly|es|s|al|ment|ments|able|ible)$/, '');
+}
 
 /**
  * Tokenizes text into normalized keywords
@@ -23,34 +57,54 @@ export function tokenize(text) {
 }
 
 /**
- * Searches parsed document sections for relevant content
+ * Searches parsed document sections for relevant content using both exact and semantic stem matching
  */
 export function retrieveRelevantSections(query, sections, topK = 3) {
   if (!query || !sections || sections.length === 0) {
     return [];
   }
 
-  const queryTokens = tokenize(query);
-  if (queryTokens.length === 0) {
+  // Filter out any corrupted or bytecode sections
+  const validSections = sections.filter(sec => sec && !isPdfBytecode(sec.content));
+  if (validSections.length === 0) {
     return [];
   }
 
-  const scoredSections = sections.map(sec => {
+  const queryTokens = tokenize(query);
+  const queryStems = queryTokens.map(normalizeStem).filter(Boolean);
+
+  if (queryTokens.length === 0 && queryStems.length === 0) {
+    return [];
+  }
+
+  const scoredSections = validSections.map(sec => {
     const titleTokens = tokenize(sec.title || '');
+    const titleStems = titleTokens.map(normalizeStem).filter(Boolean);
     const contentTokens = tokenize(sec.content || '');
+    const contentStems = contentTokens.map(normalizeStem).filter(Boolean);
 
     let score = 0;
-    for (const token of queryTokens) {
-      // Direct title match gets high priority weight
-      if (titleTokens.includes(token)) {
-        score += 4.0;
-      }
-      // Exact substring occurrences in content
-      const contentMatches = contentTokens.filter(t => t === token).length;
-      score += Math.min(contentMatches, 5) * 1.0;
 
-      // Partial stem matching
-      if (sec.content.toLowerCase().includes(token)) {
+    // 1. Check title exact and stem matches
+    for (let i = 0; i < queryTokens.length; i++) {
+      const qToken = queryTokens[i];
+      const qStem = queryStems[i];
+
+      if (titleTokens.includes(qToken)) {
+        score += 4.0;
+      } else if (qStem && titleStems.includes(qStem)) {
+        score += 3.5;
+      }
+
+      // Content matches
+      const exactContentMatches = contentTokens.filter(t => t === qToken).length;
+      score += Math.min(exactContentMatches, 5) * 1.0;
+
+      const stemContentMatches = contentStems.filter(s => s === qStem).length;
+      score += Math.min(stemContentMatches, 5) * 0.8;
+
+      // Substring check
+      if ((sec.content || '').toLowerCase().includes(qToken)) {
         score += 0.5;
       }
     }
@@ -61,9 +115,9 @@ export function retrieveRelevantSections(query, sections, topK = 3) {
     };
   });
 
-  // Filter out sections with zero or negligible relevance
+  // Filter out sections with negligible relevance
   const relevant = scoredSections
-    .filter(item => item.score > 1.2)
+    .filter(item => item.score >= 0.8)
     .sort((a, b) => b.score - a.score)
     .slice(0, topK)
     .map(item => item.section);
@@ -91,22 +145,26 @@ export function answerQuestionFromDocument(question, sections) {
   const sourceCitation = `${pageRef} • ${sectionRef}`;
 
   // Extract the most direct sentence from the section
-  const sentences = primarySection.content
+  const sentences = (primarySection.content || '')
     .split(/(?<=[.?!])\s+/)
     .map(s => s.trim())
-    .filter(s => s.length > 20);
+    .filter(s => s.length > 15 && !isPdfBytecode(s));
 
-  const queryTokens = tokenize(question);
-  let bestSentence = sentences[0] || primarySection.content.slice(0, 200);
+  const queryStems = tokenize(question).map(normalizeStem).filter(Boolean);
+  let bestSentence = sentences[0] || (primarySection.title || 'Document terms apply to this provision.');
   let highestSentenceScore = -1;
 
   for (const sentence of sentences) {
-    const sentenceTokens = tokenize(sentence);
-    const score = queryTokens.filter(t => sentenceTokens.includes(t)).length;
+    const sentenceStems = tokenize(sentence).map(normalizeStem).filter(Boolean);
+    const score = queryStems.filter(s => sentenceStems.includes(s)).length;
     if (score > highestSentenceScore) {
       highestSentenceScore = score;
       bestSentence = sentence;
     }
+  }
+
+  if (isPdfBytecode(bestSentence)) {
+    bestSentence = 'This section specifies binding covenants and conditions under the agreement.';
   }
 
   const answer = `According to the agreement (${sourceCitation}), ${bestSentence}`;

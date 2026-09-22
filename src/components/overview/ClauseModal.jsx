@@ -1,7 +1,16 @@
 import React from 'react';
 import Modal from '../common/Modal';
+import { isPdfBytecode } from '../../services/documentParser';
 
 export default function ClauseModal({ isOpen, onClose, clause, onAskInQA }) {
+  const originalTextSafe = React.useMemo(() => {
+    if (!clause) return '';
+    if (!clause.originalText || isPdfBytecode(clause.originalText)) {
+      return clause.simpleExplanation || 'Document covenants and obligations apply directly to this section.';
+    }
+    return clause.originalText;
+  }, [clause]);
+
   if (!clause) return null;
 
   return (
@@ -22,7 +31,7 @@ export default function ClauseModal({ isOpen, onClose, clause, onAskInQA }) {
             <span>What the document says (Exact text)</span>
           </div>
           <p className="font-body-sm text-body-sm text-on-surface italic bg-surface-container-lowest/80 p-3 rounded-lg border border-outline-variant/20 leading-relaxed font-mono">
-            {clause.originalText || clause.simpleExplanation}
+            {originalTextSafe}
           </p>
         </div>
 

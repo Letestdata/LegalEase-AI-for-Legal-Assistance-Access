@@ -37,8 +37,8 @@ class AuthService {
       if (stored) {
         return JSON.parse(stored);
       }
-    } catch (e) {
-      console.warn("Could not read local mock user", e);
+    } catch {
+      console.warn("Could not read local mock user");
     }
     // Default logged in user for immediate seamless experience
     return DEFAULT_MOCK_USER;
@@ -52,8 +52,8 @@ class AuthService {
       } else {
         localStorage.removeItem(MOCK_STORAGE_KEY);
       }
-    } catch (e) {
-      console.warn("Could not store local mock user", e);
+    } catch {
+      console.warn("Could not store local mock user");
     }
     this.notifyMockListeners();
   }

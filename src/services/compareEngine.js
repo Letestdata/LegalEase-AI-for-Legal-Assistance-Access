@@ -4,12 +4,7 @@
  * and categorizes them into Important Changes, Changes to Review, and Minor Changes.
  */
 
-import { parseSections } from './documentParser';
-
 export function compareDocuments(originalText, revisedText, originalName = 'Original Document', revisedName = 'New Version') {
-  const origSections = parseSections(originalText);
-  const revSections = parseSections(revisedText);
-
   const importantChanges = [];
   const changesToReview = [];
   const minorChanges = [];

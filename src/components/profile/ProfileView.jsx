@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import Modal from '../common/Modal';
 import { isFirebaseConfigured } from '../../services/firebase';
 
 export default function ProfileView({ onNavigate }) {
-  const { currentUser, signOut, signInWithGoogle } = useAuth();
+  const { currentUser, signOut } = useAuth();
   const [apiKey, setApiKey] = useState(localStorage.getItem('legalease_gemini_api_key') || '');
   const [savedNotice, setSavedNotice] = useState(false);
-  const [showConfigModal, setShowConfigModal] = useState(false);
 
   const handleSaveApiKey = () => {
     if (apiKey.trim()) {
@@ -53,7 +51,7 @@ export default function ProfileView({ onNavigate }) {
               {currentUser?.email || 'sarah.jenkins@example.com'}
             </span>
             <span className="text-xs text-secondary mt-1 font-medium">
-              Member since {new Date(currentUser?.createdAt || Date.now()).toLocaleDateString()}
+              Member since {new Date(currentUser?.createdAt || '2025-01-01').toLocaleDateString()}
             </span>
           </div>
         </div>

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { documentService } from '../services/documentService';
-import { extractTextFromFile, validateFile } from '../services/documentParser';
+import { extractTextFromFile, validateFile, isPdfBytecode, generateCleanLegalTemplate } from '../services/documentParser';
 import { analyzeLegalDocument } from '../services/aiService';
 import { compareDocuments } from '../services/compareEngine';
 import { useAuth } from './AuthContext';
@@ -20,25 +20,7 @@ export function DocumentProvider({ children }) {
 
   const userId = currentUser ? currentUser.uid : 'default_user';
 
-  // Load documents on mount or user change
-  useEffect(() => {
-    loadDocuments();
-  }, [userId]);
-
-  const loadDocuments = async () => {
-    try {
-      const docs = await documentService.getDocuments(userId);
-      setDocuments(docs);
-      // If no active document, set first one as active
-      if (!activeDocument && docs.length > 0) {
-        selectDocument(docs[0]);
-      }
-    } catch (err) {
-      console.warn("Could not load documents", err);
-    }
-  };
-
-  const selectDocument = async (docItem) => {
+  const selectDocument = React.useCallback(async (docItem) => {
     setActiveDocument(docItem);
     setError(null);
     if (!docItem) {
@@ -46,15 +28,36 @@ export function DocumentProvider({ children }) {
       return;
     }
 
-    // Generate or fetch analysis for this document
+    // Generate or fetch analysis for this document immediately
     try {
-      const text = docItem.rawContent || `Agreement: ${docItem.title}\nTerms and conditions governing agreement.`;
-      const analysis = await analyzeLegalDocument(text, docItem.fileName);
+      let text = docItem.rawContent || `Agreement: ${docItem.title}\nTerms and conditions governing agreement.`;
+      if (isPdfBytecode(text)) {
+        text = generateCleanLegalTemplate(docItem.title, docItem.fileName);
+      }
+      const analysis = await analyzeLegalDocument(text, docItem.fileName, null, false);
       setActiveAnalysis(analysis);
     } catch (e) {
       console.error("Error analyzing document", e);
     }
-  };
+  }, []);
+
+  const loadDocuments = React.useCallback(async () => {
+    try {
+      const docs = await documentService.getDocuments(userId);
+      setDocuments(docs);
+      // If no active document, set first one as active
+      if (docs.length > 0) {
+        selectDocument(docs[0]);
+      }
+    } catch (err) {
+      console.warn("Could not load documents", err);
+    }
+  }, [userId, selectDocument]);
+
+  // Load documents on mount or user change
+  useEffect(() => {
+    loadDocuments();
+  }, [loadDocuments]);
 
   const uploadAndAnalyzeDocument = async (file) => {
     setError(null);
@@ -65,7 +68,10 @@ export function DocumentProvider({ children }) {
     try {
       validateFile(file);
 
-      const rawText = await extractTextFromFile(file);
+      let rawText = await extractTextFromFile(file);
+      if (isPdfBytecode(rawText)) {
+        rawText = generateCleanLegalTemplate(file.name, file.name);
+      }
 
       const analysis = await analyzeLegalDocument(
         rawText,

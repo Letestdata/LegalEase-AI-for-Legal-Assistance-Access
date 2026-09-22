@@ -24,6 +24,13 @@ export default function AgreementsScope({ obligations }) {
     }
   ];
 
+  const items = (obligations && obligations.length > 0)
+    ? obligations.slice(0, 5).map((o, idx) => ({
+        title: o.title || `Obligation ${idx + 1}`,
+        desc: o.simpleExplanation || o.description || (defaultItems[idx] ? defaultItems[idx].desc : 'Standard document duty applies.')
+      }))
+    : defaultItems;
+
   return (
     <div className="flex flex-col gap-space-md">
       <div className="flex items-center justify-between">
@@ -41,7 +48,7 @@ export default function AgreementsScope({ obligations }) {
         </p>
 
         <ul className="flex flex-col gap-space-md">
-          {defaultItems.map((item, idx) => (
+          {items.map((item, idx) => (
             <li key={idx} className="flex items-start gap-space-sm">
               <span className="material-symbols-outlined text-[20px] text-tertiary-container mt-0.5 shrink-0">
                 check_circle
